@@ -262,7 +262,7 @@ offset 扩大中心点的范围，取值为`-offset <= origin <= +offset` _score
 scale  从offset到scale的范围，使用下面的decay作为评分
 decay  衰减值，默认值为0.5
 
-![](./elas_closer.png  =400x "衰减函数对比")
+![](https://raw.githubusercontent.com/yonddream/learn/master/elas_closer.png "衰减函数对比")
 设置一个中心点origin，中心点2公里范围内的按分数1计算，2公里到3公里处的按0.5计算。
 
 <pre><code>
