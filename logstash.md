@@ -9,26 +9,69 @@ COMBINEDAPACHELOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} [%{HTTPDATE:ti
 <pre><code>
 83.149.9.216 - - [04/Jan/2015:05:13:42 +0000] "GET /presentations/logstash-monitorama-2013/images/kibana-search.png HTTP/1.1" 200 203023 "http://semicomplete.com/presentations/logstash-monitorama-2013/" "Mozilla/5.0 (Macintosh; IntlMac OS X 11_9_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1700.77 Safari/537.36"
 </code></pre>
+在fitler中有个判断语句，如果日志名称中包含"access"就将type修改为"apache\_access"  
+date的作用是将日志的时间替代系统当前时间，这个会影响到建索引，建索引使用的是这个时间。  
+geoip是根据IP地址来获取地址信息。  
 <pre><code>
 input {
     file {
-        path => "/Users/linux/logs/tmp.log"
+        path => "/Users/linux/logs/access.log"
         start_position => beginning
     }
 }
 filter {
-    grok {
-        match => { "message" => "%{COMBINEDAPACHELOG}"}
+    if [path] =~ "access" {
+        mutate { replace => { "type" => "apache_access" } }
+        grok {
+            match => { "message" => "%{COMBINEDAPACHELOG}" }
+        }
+    }
+    date {
+        match => [ "timestamp" , "dd/MMM/yyyy:HH:mm:ss Z" ]
     }
     geoip {
         source => "clientip"
     }
 }
 output {
-    elasticsearch {}
-    stdout {}
+    elasticsearch {
+        hosts => ["localhost:9200"]
+    }
+    stdout {  codec => rubydebug  }
 }
 </code></pre>
+上面这个例子在过滤器中只将正常访问的日志给进行了切割，如果是错误日志将不会进行切割，只能看到一个段串。  
+下面我们进行修改，对所有日志进行处理。  
+<pre></code>
+input {
+  file {
+    path => "/tmp/*_log"
+  }
+}
+
+filter {
+  if [path] =~ "access" {
+    mutate { replace => { type => "apache_access" } }
+    grok {
+      match => { "message" => "%{COMBINEDAPACHELOG}" }
+    }
+    date {
+      match => [ "timestamp" , "dd/MMM/yyyy:HH:mm:ss Z" ]
+    }
+  } else if [path] =~ "error" {
+    mutate { replace => { type => "apache_error" } }
+  } else {
+    mutate { replace => { type => "random_logs" } }
+  }
+}
+
+output {
+  elasticsearch { hosts => ["localhost:9200"] }
+  stdout { codec => rubydebug }
+}
+</code></pre>
+
+
 
 ### metadata field
 metadata是个隐藏的列，如下是打印不出来metadata的信息的。  
@@ -67,3 +110,21 @@ output {
 }
 </code></pre>
 
+### 环境变量
+logstash配置时可以使用系统环境变量和自带的变量进行配合。  
+下面的例子使用了系统环境变量HOME并且我们设置了默认值tmp，如何设置了HOME使用HOME，如果没有使用我们设置的默认值。
+<pre><code>
+filter {
+  mutate {
+    add_field => {
+      "my_path" => "${HOME:tmp}/file.log"
+    }
+  }
+}
+
+export HOME="/path"
+"my_path" => "/path/file.log"
+
+No HOME defined
+"my_path" => "/tmp/file.log"
+</code></pre>
