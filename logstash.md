@@ -59,9 +59,9 @@ filter {
       match => [ "timestamp" , "dd/MMM/yyyy:HH:mm:ss Z" ]
     }
   } else if [path] =~ "error" {
-    mutate { replace => { type => "apache_error" } }
+    mutate { replace => { type => "apache\_error" } }
   } else {
-    mutate { replace => { type => "random_logs" } }
+    mutate { replace => { type => "random\_logs" } }
   }
 }
 
@@ -70,6 +70,61 @@ output {
   stdout { codec => rubydebug }
 }
 </code></pre>
+我们在这里只是对error和其他的日志类型改了索引的type，没有进行真正的解析。如果要进行解析，还需要对应项目需求来实际操作。  
+同样的我们也可以根据条件来进行输出不同的内容。  
+下面的例子，我们对不同的访问状态输出了不同的内容。  
+<pre><code>
+output {
+  if [type] == "apache" {
+    if [status] =~ /^5\d\d/ {
+      nagios { ...  }
+    } else if [status] =~ /^4\d\d/ {
+      elasticsearch { ... }
+    }
+    statsd { increment => "apache.%{status}" }
+  }
+}
+</code></pre>
+
+
+### syslog
+处理系统日志，下面的例子输入为tcp、udp的5000端口，然后filter中只处理syslog的数据grok中对数据进行自定义格式化。
+<pre><code>
+input {
+  tcp {
+    port => 5000
+    type => syslog
+  }
+  udp {
+    port => 5000
+    type => syslog
+  }
+}
+
+filter {
+  if [type] == "syslog" {
+    grok {
+      match => { "message" => "%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}" }
+      add_field => [ "received_at", "%{@timestamp}" ]
+      add_field => [ "received_from", "%{host}" ]
+    }
+    date {
+      match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+}
+
+output {
+  elasticsearch { hosts => ["localhost:9200"] }
+  stdout { codec => rubydebug }
+}
+</code></pre>
+`bin/logstash -f logstash-syslog.conf`  
+启动上面的配置后，我们可以`telnet localhost 5000`发送数据进行解析。  
+可以发送下面的数据样式。  
+`Dec 23 12:11:43 louis postfix/smtpd[31499]: connect from unknown[95.75.93.154]`   
+
+
 
 
 
@@ -128,3 +183,38 @@ export HOME="/path"
 No HOME defined
 "my_path" => "/tmp/file.log"
 </code></pre>
+
+
+### 自动重载配置
+logstash2.3里增加了自动重载配置，每隔3秒钟去检查一次配置文件是否修改。如果修改过先去检查配置文件是否正确，如果正确直接进行切换。如果错误的话，旧的继续运行，在终端输出新的配置文件的错误。     
+<pre><code>
+bin/logstash –f apache.config --auto-reload
+</code></pre>
+
+### 插件管理
+下面的分别为列出所有的插件，列出所有的插件并且包含插件的版本信息，列出所有包含kafka的插件，列出所有output组的插件。  
+<pre><code>
+bin/logstash-plugin list 
+bin/logstash-plugin list --verbose 
+bin/logstash-plugin list kafka
+bin/logstash-plugin list --group output 
+</code></pre>
+安装kafka相关的插件
+下面分别是直接进行安装，使用打包好的gem文件安装，最后一个是使用源代码编译安装。  
+<pre><code>
+bin/logstash-plugin install logstash-output-kafka logstash-input-kafka
+bin/logstash-plugin install /path/to/logstash-output-kafka-1.0.0.gem
+bin/logstash --pluginpath /opt/shared/lib/logstash/input/my-custom-plugin-code.rb
+</code></pre>
+下面是插件的更新，更新所有插件，更新单个插件，删除单个插件，设置代理。  
+<pre><code>
+bin/logstash-plugin update 
+bin/logstash-plugin update logstash-output-kafka 
+bin/logstash-plugin uninstall logstash-output-kafka
+export HTTP_PROXY=http://127.0.0.1:3128
+</code></pre>
+
+
+### kafka配置
+[kafka input详细配置](https://www.elastic.co/guide/en/logstash/current/plugins-inputs-kafka.html "kafka")  
+[kafka output详细配置](https://www.elastic.co/guide/en/logstash/current/plugins-outputs-kafka.html "kafka")
