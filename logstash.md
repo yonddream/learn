@@ -11,7 +11,7 @@ COMBINEDAPACHELOG %{IPORHOST:clientip} %{USER:ident} %{USER:auth} [%{HTTPDATE:ti
 </code></pre>
 在fitler中有个判断语句，如果日志名称中包含"access"就将type修改为"apache\_access"  
 date的作用是将日志的时间替代系统当前时间，这个会影响到建索引，建索引使用的是这个时间。  
-geoip是根据IP地址来获取地址信息。  
+geoip是根据IP地址来获取地址信息。grok用于解析非结构化数据。    
 <pre><code>
 input {
     file {
