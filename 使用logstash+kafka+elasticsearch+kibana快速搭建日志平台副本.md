@@ -121,4 +121,74 @@ Topic:mytopic	PartitionCount:1	ReplicationFactor:3	Configs:
 partition：同一个topic下可以设置多个partition，将topic下的message存储到不同的partition下，目的是为了提高并行性  
 leader：负责此partition的读写操作，每个broker都有可能成为某partition的leader  
 replicas：副本，即此partition在那几个broker上有备份，不管broker是否存活  
-isr：存活的replicas  
+isr：存活的replicas   
+
+
+### logstash
+logstash分为2部，一部分将log日志导入到kafka中，第二部分将kafka中的数据导入到elasticsearch。  
+
+#### 将日志解析后导入kafka
+下面的配置是从日志中获取数据然后解析后将数据存入kafka中。   
+<pre><code>
+input {
+  file {
+    path => "/Users/linux/logs/access.log"
+  }
+}
+
+filter {
+  if [path] =~ "access" {
+    mutate { replace => { type => "apache_access" } }
+    grok {
+      match => { "message" => "%{COMBINEDAPACHELOG}" }
+    }
+    date {
+      match => [ "timestamp" , "dd/MMM/yyyy:HH:mm:ss Z" ]
+    }
+    geoip {
+        source => "clientip"
+    }
+  } else if [path] =~ "error" {
+    mutate { replace => { type => "apache_error" } }
+  } else {
+    mutate { replace => { type => "random_logs" } }
+  }
+}
+
+output {
+    kafka {
+        topic_id => "test"
+    }
+    stdout {  codec => rubydebug  }
+}
+</code></pre>
+
+
+#### 获取kafka中的数据，存入elasticsearch
+存入kafka中的数据已经是json格式了，我们这里不需要进行处理，直接导入elasticsearch中。  
+<pre><code>
+input {
+    kafka {
+        zk_connect => "localhost:2181"
+        group_id => "logstash"
+        topic_id => "test"
+        reset_beginning => false # boolean (optional)， default: false
+        consumer_threads => 1  # number (optional)， default: 1
+        decorate_events => true # boolean (optional)， default: false
+        auto_offset_reset => "smallest"
+    }
+}
+output {
+    elasticsearch {
+        hosts => ["localhost:9200"]
+    }
+    stdout {  codec => rubydebug  }
+}
+</code></pre>
+
+
+#### 启动logstash
+<pre><code>
+bin/logstash -f config/output-kafka.conf 
+bin/logstash -f config/input-kafka.conf 
+</code></pre>
