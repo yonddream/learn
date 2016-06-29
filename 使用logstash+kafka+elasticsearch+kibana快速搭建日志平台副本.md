@@ -159,6 +159,8 @@ output {
     kafka {
     	retries => 2
     	workers => 1
+    	reconnect_backoff_ms => 100
+		retry_backoff_ms => 1000
         topic_id => "test"
     }
     stdout {  codec => rubydebug  }

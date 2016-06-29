@@ -218,3 +218,33 @@ export HTTP_PROXY=http://127.0.0.1:3128
 ### kafka配置
 [kafka input详细配置](https://www.elastic.co/guide/en/logstash/current/plugins-inputs-kafka.html "kafka")  
 [kafka output详细配置](https://www.elastic.co/guide/en/logstash/current/plugins-outputs-kafka.html "kafka")
+
+
+### 测试logstash的性能
+generator插件是个自动生成数据的插件，可以用来测试性能。  
+<pre><code>
+input {
+    generator {
+        count => 10000000
+        message => '{"key1":"value1","key2":[1,2],"key3":{"subkey1":"subvalue1"}}'
+        codec => json
+    }
+}
+</code></pre>
+这里测试1000W跳数据所需要的时间，没有什么意义，但是你可以在实际项目中分开使用来查看瓶颈。logstash各个组建都是分散的，可以自由进行测试。  
+运行上面的conf  
+`time ./bin/logstash -f config/test.conf `  
+还可以配合dot插件进行测试，dot插件在屏幕上输出(.)。  
+<pre><code>
+output {
+    stdout {
+        codec => dots
+    }
+}
+</code></pre>
+运行上面的配置，等待一段时间后出现下面的输出。  
+<pre><code>
+bin/logstash -f config/test.conf | pv -abt > /dev/null
+ 8.5MiB 0:02:46 [52.4KiB/s]s]/s]
+</code></pre>
+这里单位是B/s，但是因为一个event就输出一个.，也就是 1B。所以 52.4kiB/s 就相当于是 52.4k event/s。  
