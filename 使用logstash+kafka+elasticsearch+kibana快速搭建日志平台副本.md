@@ -157,6 +157,8 @@ filter {
 
 output {
     kafka {
+    	retries => 2
+    	workers => 1
         topic_id => "test"
     }
     stdout {  codec => rubydebug  }
