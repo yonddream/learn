@@ -59,9 +59,9 @@ filter {
       match => [ "timestamp" , "dd/MMM/yyyy:HH:mm:ss Z" ]
     }
   } else if [path] =~ "error" {
-    mutate { replace => { type => "apache\_error" } }
+    mutate { replace => { type => "apache_error" } }
   } else {
-    mutate { replace => { type => "random\_logs" } }
+    mutate { replace => { type => "random_logs" } }
   }
 }
 
