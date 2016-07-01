@@ -196,3 +196,14 @@ output {
 bin/logstash -f config/output-kafka.conf 
 bin/logstash -f config/input-kafka.conf 
 </code></pre>
+
+
+### 4. kianna
+kianna现在已经是第四版，使用的是node和angularjs启动非常简单。  
+`cd /usr/local/Cellar/kibana/4.5.0 && bin/kibana &`  
+启动后就可以使用localhost:5601进行访问了。如果觉得node自带的服务端不够用，也可以使用nginx做转发，起多个服务。  
+进入kianna后，会在设置中连接到你的ES，默认是连接本地的。然后设置使用的索引。默认使用"logstash-*"。  
+
+#### 4.1 discover
+在Discover页提交一个搜索，你就可以搜索匹配当前索引模式的索引数据了。你可以直接输入简单的请求字符串，也就是用Lucene query syntax，也可以用完整的基于JSON的Elasticsearch Query DSL。   
+
