@@ -207,3 +207,6 @@ kianna现在已经是第四版，使用的是node和angularjs启动非常简单�
 #### 4.1 discover
 在Discover页提交一个搜索，你就可以搜索匹配当前索引模式的索引数据了。你可以直接输入简单的请求字符串，也就是用Lucene query syntax，也可以用完整的基于JSON的Elasticsearch Query DSL。   
 
+
+#### 4.2 visualize
+
