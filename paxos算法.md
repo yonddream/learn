@@ -87,7 +87,7 @@ Paxos对某一个问题达成一致的一个协议.《Paxos Made Simple》[2]花
 注：这是该算法第一次公开发表。
 4. [Paxos算法维基百科] [wiki]  ----  里面详细的描述了Paxos的论证过程。  
 5. [Paxos Made Live - An Engineering Perspective] [paxos-live]  ----  Multi Paxos实际应用  
-6. [lamport-paxos] [lamport]  ----  描写了他用9年时间发表这个算法的前前后后   
+6. [Lamport-Paxos] [Lamport]  ----  描写了他用9年时间发表这个算法的前前后后   
 
 
 
@@ -95,4 +95,4 @@ Paxos对某一个问题达成一致的一个协议.《Paxos Made Simple》[2]花
 [paxos]: http://research.microsoft.com/en-us/um/people/lamport/pubs/paxos-simple.pdf  (paxos论文)
 [paxos-first]: http://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf  (paxos论文)
 [paxos-live]: https://www.cs.utexas.edu/users/lorenzo/corsi/cs380d/papers/paper2-1.pdf  (Multi Paxos)
-[lamport]: http://research.microsoft.com/users/lamport/pubs/pubs.html#lamport-paxos (Lamport发表论文的9年趣事)
+[Lamport]: http://research.microsoft.com/users/lamport/pubs/pubs.html#lamport-paxos (Lamport发表论文的9年趣事)
