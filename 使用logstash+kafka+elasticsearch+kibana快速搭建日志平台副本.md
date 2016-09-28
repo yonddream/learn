@@ -117,8 +117,8 @@ JMX_PORT=9999 bin/kafka-server-start /usr/local/etc/kafka/server3.properties &
 bin/kafka-topics --zookeeper localhost:2181  --desc
 Topic:mytopic	PartitionCount:1	ReplicationFactor:3	Configs:
 	Topic: mytopic	Partition: 0	Leader: 1	Replicas: 1,0,2	Isr: 1,0,2
-</code></pre>
-partition：同一个topic下可以设置多个partition，将topic下的message存储到不同的partition下，目的是为了提高并行性  
+</code></pre>  
+partition：同一个topic下可以设置多个partition，将topic下的message存储到不同的partition下，目的是为了提高并行性    
 leader：负责此partition的读写操作，每个broker都有可能成为某partition的leader  
 replicas：副本，即此partition在那几个broker上有备份，不管broker是否存活  
 isr：存活的replicas   
